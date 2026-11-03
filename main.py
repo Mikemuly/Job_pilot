@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from sqlmodel import Session, select
 from database import create_db, get_session
-from models import Profile
+from models import Profile, ProfileUpdate
 from pypdf import PdfReader
 from ai import extract_profile
 
@@ -30,19 +30,50 @@ def get_profile(profile_id: int, session: Session = Depends(get_session)):
     return profile
 
 @app.post("/upload_cv")
-async def upload_cv(file :UploadFile = File(...)):
+async def upload_cv(
+    file :UploadFile = File(...),
+    session: Session = Depends(get_session),
+):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Please upload a PDF file")
 
     reader = PdfReader(file.file)
     text = "\n".join(page.extract_text() or "" for page in reader.pages)
 
-    return extract_profile(text)
+    data = extract_profile(text)
+    profile = Profile(
+        full_name= str(data.get("full_name", "")),
+        email= str(data.get("email", "")),
+        skills= str(data.get("skills", "")),
+        experience= str(data.get("experience", "")),
+        education= str(data.get("education", "")),
+    
+    )
+    session.add(profile)
+    session.commit()
+    session.refresh(profile)
+    return profile
 
+@app.put("/profiles/{profile_id}")
+def update_profile(
+    profile_id: int,
+    updated: ProfileUpdate,
+    session: Session= Depends(get_session),
 
+):
+    profile = session.get(Profile, profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    for key, value in updates.model_dump(exclude_unset=True).items():
+        setattr(profile, key, value)
+        
+
+    session.add(profile)
+    session.commit()
+    session.refresh(profile)
+    return profile
           
-
-
 
 @app.get("/health")
 def health():

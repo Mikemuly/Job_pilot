@@ -8,4 +8,11 @@ class Profile(SQLModel, table=True):
     skills: str = ""
     experience: str = ""
     education: str = ""
-    
+
+
+class ProfileUpdate(SQLModel):
+    full_name: Optional [str] = None
+    email: Optional [str] = None
+    skills: Optional [str] = None
+    experience: Optional [str] = None
+    education: Optional [str] = None
