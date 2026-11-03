@@ -57,7 +57,7 @@ async def upload_cv(
 @app.put("/profiles/{profile_id}")
 def update_profile(
     profile_id: int,
-    updated: ProfileUpdate,
+    updates: ProfileUpdate,
     session: Session= Depends(get_session),
 
 ):
@@ -67,7 +67,7 @@ def update_profile(
 
     for key, value in updates.model_dump(exclude_unset=True).items():
         setattr(profile, key, value)
-        
+
 
     session.add(profile)
     session.commit()
