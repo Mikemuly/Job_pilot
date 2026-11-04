@@ -6,6 +6,7 @@ from pypdf import PdfReader
 from ai import extract_profile
 from models import Profile, ProfileUpdate, Job
 from jobs import fetch_jobs
+from matching import score_job
 
 
 app = FastAPI(title="JobPilot")
@@ -102,6 +103,31 @@ def fetch_and_save_jobs(search: str, session: Session= Depends(get_session)):
 @app.get("/jobs")
 def list_jobs(session: Session = Depends(get_session)):
     return session.exec(select(Job)).all()          
+
+
+@app.get("/profile/{profile_id}/matches")
+def get_matches(profile_id: int, session: Session = Depends(get_session)):
+    profile= session.get(Profile, profile_id)
+    if not profile:
+        raise HTTPException(status_code =404, detail="Profile not found")
+
+    results = []
+    for job in session.exec(select(Job)).all():
+        result = score_job(profile.skills, f"{job.title} {job.description}")
+        results.append(
+            {
+                "job_id": job.id,
+                "title": job.title,
+                "company": job.company,
+                "url": job.url,
+                "score": result["score"],
+                "matched": result["matched"],
+            }
+        )
+    results.sort(key=lambda r: r["score"], reverse=True)
+    return results[:10]
+
+
 
 @app.get("/health")
 def health():
