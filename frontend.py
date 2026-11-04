@@ -5,6 +5,19 @@ API = "http://127.0.0.1:8000"
 
 st.title("JobPilot")
 
+st.subheader("UPload CV")
+cv = st.file_uploader("Choose a PDF", type=["pdf"])
+
+if cv and st.button ("Extract profile"):
+    files = {"file": (cv.name, cv.getvalue(), "application/pdf")}
+    r = requests.post(f"{API}/upload_cv", files=files)
+    if r.status_code == 200:
+        st.session_state["profile"] = r.json()
+        st.success("Profile created successfully")
+    else:
+        st.error("Upload failed. Please try again.")
+
+    
 profile_id = st.number_input("Profile ID", min_value=1, step=1)
 
 if st.button("Load profile"):
