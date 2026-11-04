@@ -54,7 +54,7 @@ async def upload_cv(
     session.refresh(profile)
     return profile
 
-@app.put("/profiles/{profile_id}")
+@app.patch("/profiles/{profile_id}")
 def update_profile(
     profile_id: int,
     updates: ProfileUpdate,
