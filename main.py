@@ -4,6 +4,9 @@ from database import create_db, get_session
 from models import Profile, ProfileUpdate
 from pypdf import PdfReader
 from ai import extract_profile
+from models import Profile, ProfileUpdate, Job
+from jobs import fetch_jobs
+
 
 app = FastAPI(title="JobPilot")
 
@@ -73,7 +76,32 @@ def update_profile(
     session.commit()
     session.refresh(profile)
     return profile
-          
+
+@app.post("/jobs/fetch")
+def fetch_and_save_jobs(search: str, session: Session= Depends(get_session)):
+    saved = 0
+    for j in fetch_jobs(search, 20):
+        source_id = str (j["id"])
+        exists = session.exec (select(Job).where(Job.source_id == source_id)).first()
+        if exists:
+            continue
+        session.add(
+            Job(
+                source_id = source_id,
+                title = j["title"],
+                company = j["company_name"],
+                location = j.get("candidate_require_location", ""),
+                url = j["url"],
+                description = j.get("description", ""),
+            )
+        )
+        saved += 1
+    session.commit()
+    return {"saved": saved}
+
+@app.get("/jobs")
+def list_jobs(session: Session = Depends(get_session)):
+    return session.exec(select(Job)).all()          
 
 @app.get("/health")
 def health():

@@ -16,3 +16,13 @@ class ProfileUpdate(SQLModel):
     skills: Optional [str] = None
     experience: Optional [str] = None
     education: Optional [str] = None
+
+
+class Job(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key = True)
+    source_id: str =Field(index=True, unique=True)
+    title:str
+    company:str
+    location:str = ""
+    url:str
+    description:str = ""
