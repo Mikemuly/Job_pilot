@@ -5,7 +5,16 @@ API = "http://127.0.0.1:8000"
 
 st.title("JobPilot")
 
-st.subheader("UPload CV")
+st.subheader("Get Jobs")
+search = st.text_input("Search term", value="python")
+if st.button ("Fetch jobs"):
+    r=requests.post(f"{API}/jobs/fetch",params={"search": search})
+    if r.status_code == 200:
+        st.success(f"Saved {r.json()['saved']} new jobs")
+    else:
+        st.error("Could not fetch jobs")
+
+st.subheader("Upload CV")
 cv = st.file_uploader("Choose a PDF", type=["pdf"])
 
 if cv and st.button ("Extract profile"):
@@ -51,3 +60,15 @@ if "profile" in st.session_state:
             st.success("Saved successfully")
         else:
             st.error("Could not save changes")
+
+
+    st.subheader("Top job matches")
+    if st.button("Find matches"):
+        r = requests.get(f"{API}/profile/{pid}/matches")
+        if r.status_code == 200:
+            for m in r.json():
+                st.markdown(f"**{m['title']}** at {m['company']}:{m['score']}%")
+                st.caption(f"Matched: {', '.join(m['matched']) or 'none'}")
+                st.link_button("View job", m["url"])
+        else:
+            st.error("Could not load matches")
