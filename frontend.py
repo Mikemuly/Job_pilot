@@ -66,9 +66,22 @@ if "profile" in st.session_state:
     if st.button("Find matches"):
         r = requests.get(f"{API}/profile/{pid}/matches")
         if r.status_code == 200:
-            for m in r.json():
-                st.markdown(f"**{m['title']}** at {m['company']}:{m['score']}%")
-                st.caption(f"Matched: {', '.join(m['matched']) or 'none'}")
-                st.link_button("View job", m["url"])
+            st.session_state["matches"] = r.json()
         else:
             st.error("Could not load matches")
+
+        
+    for m in st.session_state.get("matches", []):
+        st.markdown(f"**{m['title']}** at {m['company']}:{m['score']}%")
+        st.caption(f"Matched: {', '.join(m['matched']) or 'none'}")
+        st.link_button("View job", m["url"])
+
+        exp_key = f"explanation_{m['job_id']}"
+        if st.button("Explain", key=f"explain_{m['job_id']}"):
+            r=requests.get(f"{API}/profiles/{pid}/explain/{m['job_id']}")
+            if r.status_code == 200:
+                st.session_state[exp_key] = (r.json()["explanation"])
+            else:
+                st.error("Could not Explain")
+        if exp_key in st.session_state:
+            st.info(st.session_state[exp_key])

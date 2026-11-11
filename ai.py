@@ -28,3 +28,28 @@ def extract_profile(cv_text: str) -> dict:
         ],
     )
     return json.loads(response.choices[0].message.content)
+
+
+def explain_match(skills: str, experience: str, job_title: str, job_description: str) ->str:
+    response = client.chat.completions.create(
+        model="openai/gpt-oss-120b",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You compare a candidate to a job. In 3 short sentences:"
+                    "Why they fir, then what is missing. Plain text. no markdown."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"candidate skills: {skills}\n"
+                    f"candidate experience: {experience}\n\n"
+                    f"Job: {job_title}\n"
+                    f"{job_description[:3000]}"
+                ),
+            },
+        ],
+    )
+    return response.choices[0].message.content

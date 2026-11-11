@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from database import create_db, get_session
 from models import Profile, ProfileUpdate
 from pypdf import PdfReader
-from ai import extract_profile
+from ai import extract_profile, explain_match
 from models import Profile, ProfileUpdate, Job
 from jobs import fetch_jobs
 from matching import score_job
@@ -127,6 +127,21 @@ def get_matches(profile_id: int, session: Session = Depends(get_session)):
     results.sort(key=lambda r: r["score"], reverse=True)
     return results[:10]
 
+@app.get("/profiles/{profile_id}/explain/{job_id}")
+def explain(
+    profile_id: int,
+    job_id: int,
+    session: Session = Depends(get_session),
+):
+    profile = session.get(Profile, profile_id)
+    job = session.get(Job, job_id)
+    if not profile or not job:
+        raise HTTPException(status_code=404, detail="Profile or job not found")
+
+    text = explain_match(
+        profile.skills, profile.experience, job.title, job.description
+    )
+    return {"explanation": text}
 
 
 @app.get("/health")
