@@ -53,3 +53,38 @@ def explain_match(skills: str, experience: str, job_title: str, job_description:
         ],
     )
     return response.choices[0].message.content
+
+def write_cover_letter(
+        full_name: str,
+        skills: str,
+        experience: str,
+        education: str,
+        job_title: str,
+        company: str,
+        job_description: str,
+) -> str:
+    response = client.chat.completions.create(
+        model="openai/gpt-oss-120b",
+        messages=[
+            {
+                "role": "system",
+                "content":(
+                    "Write a concise cover letter, under 200 words, in plain text. "
+                    "Use only facts from the candidate details. Never invent "
+                    "experience, employers, or numbers. Sign off with the candidate's name."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Candidate: {full_name}\n"
+                    f"Skills: {skills}\n"
+                    f"Experience: {experience}\n"
+                    f"Education: {education}\n\n"
+                    f"Job: {job_title} at {company}\n"
+                    f"{job_description[:3000]}"
+                ),
+            },
+        ],
+    )
+    return response.choices[0].message.content

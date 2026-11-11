@@ -85,3 +85,15 @@ if "profile" in st.session_state:
                 st.error("Could not Explain")
         if exp_key in st.session_state:
             st.info(st.session_state[exp_key])
+
+        letter_key = f"letter_{m['job_id']}"
+        if st.button("Write cover letter", key=f"btn_letter_{m['job_id']}"):
+            with st.spinner("Writing..."):
+                r = requests.post(f"{API}/profile/{pid}/cover-letter/{m['job_id']}")
+            if r.status_code == 200:
+                st.session_state[letter_key] = r.json()["cover_letter"]
+            else:
+                st.error("Could not write the letter")
+
+        if letter_key in st.session_state:
+            st.text_area("Cover letter (edit brfore using)", key=letter_key, height=300)

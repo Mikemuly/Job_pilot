@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from database import create_db, get_session
 from models import Profile, ProfileUpdate
 from pypdf import PdfReader
-from ai import extract_profile, explain_match
+from ai import extract_profile, explain_match, write_cover_letter
 from models import Profile, ProfileUpdate, Job
 from jobs import fetch_jobs
 from matching import score_job
@@ -142,6 +142,28 @@ def explain(
         profile.skills, profile.experience, job.title, job.description
     )
     return {"explanation": text}
+
+@app.post("/profile/{profile_id}/cover-letter/{job_id}")
+def cover_letter(
+    profile_id: int,
+    job_id: int,
+    session: Session = Depends(get_session),
+):
+    profile = session.get(Profile, profile_id)
+    job = session.get(Job, job_id)
+    if not profile or not job:
+        raise HTTPException(status_code=404, detail="Profile or job not found")
+
+    letter = write_cover_letter(
+        profile.full_name,
+        profile.skills,
+        profile.experience,
+        profile.education,
+        job.title,
+        job.company,
+        job.description,
+    )
+    return {"cover_letter": letter}
 
 
 @app.get("/health")
