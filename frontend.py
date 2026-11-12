@@ -98,21 +98,22 @@ if "profile" in st.session_state:
         if letter_key in st.session_state:
             st.text_area("Cover letter (edit brfore using)", key=letter_key, height=300)
             
-        if st.button("Approve and save", key=f"approve_{m['job_id']}"):
-            r = requests.post(
-                f"{API}/applications",
-                params={
-                    "profile_id": pid,
-                    "job_id": m["job_id"],
-                    "cover_letter": st.session_state[letter_key],
-                },
-            )
-            if r.status_code == 200:
-                st.success("Saved to your applications")
-            elif r.status_code == 409:
-                st.warning("You already saved this job")
-            else:
-                st.error("Could not save")
+            if st.button("Approve and save", key=f"approve_{m['job_id']}"):
+                letter = st.session_state.get(letter_key, "")
+                r = requests.post(
+                    f"{API}/applications",
+                    params={
+                        "profile_id": pid,
+                        "job_id": m["job_id"],
+                        "cover_letter": st.session_state[letter_key],
+                    },
+                )
+                if r.status_code == 200:
+                    st.success("Saved to your applications")
+                elif r.status_code == 409:
+                    st.warning("You already saved this job")
+                else:
+                    st.error("Could not save")
                 
     st.subheader("My applications")
     if st.button("Refresh applications"):
