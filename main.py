@@ -4,7 +4,7 @@ from database import create_db, get_session
 from models import Profile, ProfileUpdate
 from pypdf import PdfReader
 from ai import extract_profile, explain_match, write_cover_letter
-from models import Profile, ProfileUpdate, Job
+from models import Profile, ProfileUpdate, Job, Application
 from jobs import fetch_jobs
 from matching import score_job
 
@@ -171,3 +171,72 @@ def health():
     return {"status": "ok"}
 
 
+@app.post("/applications")
+def create_applications(
+    profile_id: int,
+    job_id: int,
+    cover_letter: str = "",
+    session: Session = Depends(get_session),
+):
+    if not session.get(Profile, profile_id) or not session.get(Job, job_id):
+        raise HTTPException(status_code=404, detail="Profile or job not found")
+
+    existing = session.exec(
+        select(Application).where(
+            Application.profile_id == profile_id,
+            Application.job_id == job_id,
+        )
+    ).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="Already saved")
+
+    application = Application(
+        profile_id=profile_id,
+        job_id=job_id,
+        cover_letter=cover_letter,
+        status="approved"
+    )
+    session.add(application)
+    session.commit()
+    session.refresh(application)
+    return application
+
+@app.get("/profiles/{profile_id}/applications")
+def list_applications(profile_id: int, session: Session = Depends(get_session)):
+    rows = session.exec(
+        select(Application, Job)
+        .joint(Job, Job.id == Application.job_id)
+        .where(Application.profile_id == profile_id)
+    ).all()
+
+    return [
+        {
+            "id": app_.id,
+            "status": app_.status,
+            "job_title": job.title,
+            "company": job.company,
+            "url": job.url,
+            "cover_letter": app_.cover_letter,
+        }
+        for app_, job in rows
+    ]
+
+@app.patch("/applications/{application_id}")
+def update_application_status(
+    application_id: int,
+    status: str,
+    session: Session = Depends(get_session),
+):
+    allowed = ["saved", "approved", "applied", "interview", "offer", "rejected"]
+    if status not in allowed:
+        raise HTTPException(status_code = 400, detail=f"Status must be one of {allowed}")
+
+    application = session.get(Application, application_id)
+    if not application:
+        raise HTTPException(status_code=400, detail= "Application not found")
+
+    application.status = status
+    session.add(application)
+    session.commit()
+    session.refresh(application)
+    return application

@@ -26,3 +26,11 @@ class Job(SQLModel, table=True):
     location:str = ""
     url:str
     description:str = ""
+
+class Application(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    profile_id: int = Field(foreign_key="profile.id")
+    job_id: int = Field(foreign_key="job.id")
+    status: str = "saved"
+    cover_letter: str = ""
+    

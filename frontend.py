@@ -97,3 +97,43 @@ if "profile" in st.session_state:
 
         if letter_key in st.session_state:
             st.text_area("Cover letter (edit brfore using)", key=letter_key, height=300)
+            
+        if st.button("Approve and save", key=f"approve_{m['job_id']}"):
+            r = requests.post(
+                f"{API}/applications",
+                params={
+                    "profile_id": pid,
+                    "job_id": m["job_id"],
+                    "cover_letter": st.session_state[letter_key],
+                },
+            )
+            if r.status_code == 200:
+                st.success("Saved to your applications")
+            elif r.status_code == 409:
+                st.warning("You already saved this job")
+            else:
+                st.error("Could not save")
+                
+    st.subheader("My applications")
+    if st.button("Refresh applications"):
+        r = requests.get(f"{API}/profiles/{pid}/applications")
+        if r.status_code ==200:
+            st.session_state["applications"] = r.json()
+            
+    statuses = ["saved", "approved", "applied", "interview", "offer", "rejected"]
+    for a in st.session_state.get("applications", []):
+        st.markdown(f"**{a['job_title']}** at {a['company']}")
+        st.link_button("View job", a["url"])
+        new_status = st.selectbox(
+            "Status",
+            statuses,
+            index=statuses.index(a["status"]),
+            key=f"status_{a['id']}",
+        )
+        if new_status != (a["status"]):
+            r=requests.patch(
+                f"{API}/applications/{a['id']}",param= {"status": new_status}
+            )
+            if r.status_code == 200:
+                a["status"] = new_status
+                st.success("Status updated")
