@@ -39,3 +39,97 @@ AI assistant that raeds your CV, builds your profile and (soon) matches you to j
 - Streamlit (frontend)
 - Groq API (LLM)
 - pytest and Github Actions
+
+
+## Setup
+
+### Prerequisites
+
+- Python 3.12 or newer
+- Git
+- A free Groq API key from https://console.groq.com/keys
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/Mikemuly/Job_pilot.git
+cd Job_pilot```
+
+### 2. Create and activate a virtual environment
+
+```bash
+python -m venv .venv
+```
+
+Windows (PowerShell):
+
+```powershell
+.venv\Scripts\activate.ps1
+```
+
+Mac/Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Add your API key
+
+Copy the example file and edit it:
+
+``bash
+# Windows
+copy .env.example .env
+# Mac/Linux
+cp .env.example .env
+```
+
+Open `.env` and set:
+
+```
+GROQ_API_KEY=your-secret-key
+```
+
+### 5. Start the app
+
+You need two terminals, both in the project folder with '(.venv)` active.
+
+Terminal 1, The API:
+
+```bash
+uvicorn main:app --reload
+```
+
+Terminal 2, the web interface:
+
+```bash
+streamlit run frontend.py
+```
+The app opens on https://localhost:8501
+
+The database file `jobpilot.db` is created automatically on the first run.
+
+## How to use it
+
+1. **Get jobs:** enter a serach term (for example `python`) and click Fetch jobs.
+2. **Upload your CV** as a PDF and click Extract profile.
+3. **Check and edit** the extracted details, the save changes.
+4. Click **Find matches** to see jobs ranked against your skills.
+5. Click **Explain** to see why job fits and what is missing.
+6. Click **Write cover letter**, edit it, then **Approve and save**
+7. Track progress under **My applications**
+
+## Troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| Powershell blocks the activate script | Run `Set-ExecutionPolicy -scope CurrentUser RemoteSigned`, then activate again |
+| `ModuleNotFoundError` | The virtual environment is not active, or run `pip install -r requirements.txt` again |
+| `429` or "no credits" from the AI | You hit the free tier limit. Wait a minuteand retry |
+| `no such column` after pulling a new code | Stop the app, delete `job_pilot.db`, and start again (this clears saved data) |
+| Streamlit says it cannot connect | Make sure uvicorn is running in the other terminal |

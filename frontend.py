@@ -1,5 +1,6 @@
 import requests
 import streamlit as st
+from pdf_utils import letter_to_pdf
 
 API = "http://127.0.0.1:8000"
 
@@ -98,6 +99,18 @@ if "profile" in st.session_state:
         if letter_key in st.session_state:
             st.text_area("Cover letter (edit brfore using)", key=letter_key, height=300)
             
+            safe_company = "".join(
+                c for c in m["company"] if c.isalnum() or c in "_-"
+            ).strip().replace(" ", "_")
+            
+            st.download_button(
+                "Download as PDF",
+                data = letter_to_pdf(st.session_state[letter_key]),
+                file_name=f"cover_letter_{safe_company}.pdf",
+                mime="application/pdf",
+                key=f"download_pdf_{m['job_id']}",
+            )        
+            
             if st.button("Approve and save", key=f"approve_{m['job_id']}"):
                 letter = st.session_state.get(letter_key, "")
                 r = requests.post(
@@ -139,4 +152,4 @@ if "profile" in st.session_state:
                 a["status"] = new_status
                 st.success("Status updated")
                 
-                              
+       
