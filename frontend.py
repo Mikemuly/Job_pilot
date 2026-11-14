@@ -138,3 +138,5 @@ if "profile" in st.session_state:
             if r.status_code == 200:
                 a["status"] = new_status
                 st.success("Status updated")
+                
+                              
