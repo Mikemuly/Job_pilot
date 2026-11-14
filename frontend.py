@@ -105,7 +105,7 @@ if "profile" in st.session_state:
             
             st.download_button(
                 "Download as PDF",
-                data = letter_to_pdf(st.session_state[letter_key]),
+                data=letter_to_pdf(st.session_state[letter_key], p["full_name"], p["email"]),
                 file_name=f"cover_letter_{safe_company}.pdf",
                 mime="application/pdf",
                 key=f"download_pdf_{m['job_id']}",
